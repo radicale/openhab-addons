@@ -1,0 +1,848 @@
+swagger: '2.0'
+
+info:
+  version: "1.0.5"
+  title: OpenMotics Webservice API
+
+schemes:
+  - https
+consumes:
+  - application/json
+  - application/x-www-form-urlencoded
+produces:
+  - application/json
+  - text/html;charset=utf-8
+
+securityDefinitions:
+  tokenSecurity:
+    type: apiKey
+    in: query
+    name: token
+    description: Security token through user authentication
+
+security:
+  - tokenSecurity: []
+ 
+x-type-definitions:
+  timerType: &timerType
+    description: Output timer values
+    type: integer
+    format: int32
+    minimum: 0
+    maximum: 65535
+
+  floorType: &floorType
+    description: Floor number
+    type: integer
+    format: int32
+    minimum: 0
+    maximum: 255
+    
+  idType: &idType
+    description: ID number
+    type: integer
+    format: int32
+    minimum: 0
+    maximum: 240
+
+  nameType: &nameType
+    description: Item name
+    type: string
+    format: string
+    maxLength: 16
+    
+  oTypeType: &oTypeType
+    description: Output type
+    type: integer
+    format: int32
+    minimum: 0
+    maximum: 255
+    
+  omTypeType: &omTypeType
+    description: Output module types
+    type: string
+    format: string
+    maxLength: 1
+    enum:
+      - o
+      - O
+      - R
+      - D
+    x-enum-varnames:
+      - Vo
+      - O
+      - R
+      - D
+
+  imTypeType: &imTypeType
+    description: Input module types
+    type: string
+    format: string
+    maxLength: 1
+    enum:
+      - i
+      - I
+      - T
+      - L
+    x-enum-varnames:
+      - Vi
+      - I
+      - T
+      - L
+      
+  smTypeType: &smTypeType
+    description: Shutter module types
+    type: string
+    format: string
+    maxLength: 1
+    enum:
+      - S
+      
+  bActionsTyoe: &bActionsType
+    description: A list of basic actions
+    type: string
+    format: string
+    
+  actionType: &actionType
+    description: A single action
+    type: integer
+    format: int32
+    minimum: 0
+    maximum: 255
+    
+  invertType: &invertType
+    description: Input inversion
+    type: integer
+    format: int32
+    minimum: 0
+    maximum: 255
+      
+definitions:
+  outFieldsModel:
+    description: List of output configuration fields
+    type: array
+    items:
+      type: string
+      enum:
+        - floor
+        - module_type
+        - name
+        - timer
+        - type
+
+  outConfModel:
+    type: object
+    properties:
+      id:
+        <<: *idType
+      floor:
+        <<: *floorType
+      name:
+        <<: *nameType
+      timer:
+        <<: *timerType
+      module_type:
+        <<: *omTypeType
+      type:
+        <<: *oTypeType
+    required:
+      - id
+
+  inFieldsModel:
+    description: List of input configuration fields
+    type: array
+    items:
+      type: string
+      enum:
+        - basic_actions
+        - module_type
+        - name
+        - action
+        - invert
+
+  inConfModel:
+    type: object
+    properties:
+      id:
+        <<: *idType
+      basic_actions:
+        <<: *bActionsType
+      name:
+        <<: *nameType
+      action:
+        <<: *actionType
+      module_type:
+        <<: *imTypeType
+      invert:
+        <<: *invertType
+    required:
+      - id
+      
+  grpActConfModel:
+    type: object
+    properties:
+      id:
+        <<: *idType
+      name:
+        <<: *nameType
+      actions:
+        <<: *bActionsType
+
+# Response models
+
+  responseModel:
+    type: object
+#    discriminator: success
+    properties:
+      success:
+        type: boolean
+        description: true if successful
+      msg:
+        type: string
+        format: string
+        description: error message if success is false
+    required:
+      - success
+  
+  loginModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: token
+        properties:
+          token:
+            type: string
+            description: Authentication Token
+        required:
+          - token
+  
+  statusModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: status
+        properties:
+          status:
+            type: string
+            description: Status
+        required:
+          - status
+        
+  getUsernamesModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: usernames
+        properties:
+          usernames:
+            description: list of usernames
+            type: array
+            items:
+              type: string
+        required:
+          - usernames
+
+  getModulesModel:  
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: modules
+        properties:
+          outputs:
+            type: array
+            items:
+              <<: *omTypeType
+          inputs:
+            type: array
+            items:
+              <<: *imTypeType
+          shutters:
+            type: array
+            items:
+              <<: *smTypeType
+        required:
+          - outputs
+          - inputs
+          - shutters
+
+  getOutputStatusModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: outputStatus
+        properties:
+          status:
+            type: array
+            items:
+              type: object
+              properties:
+                status:
+                  type: integer
+                dimmer:
+                  type: integer
+                ctimer:
+                  type: integer
+                id:
+                  type: integer
+
+  getOutputConfigModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: config
+        properties:
+          config:
+            $ref: "#/definitions/outConfModel"
+
+  getOutputConfigsModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: config
+        properties:
+          config:
+            type: array
+            items:
+              $ref: "#/definitions/outConfModel"
+  
+  getInputConfigsModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: config
+        properties:
+          config:
+            type: array
+            items:
+              $ref: "#/definitions/inConfModel"
+  
+  getGroupActionConfigsModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: config
+        properties:
+          config:
+            type: array
+            items:
+              $ref: "#/definitions/grpActConfModel"
+  
+  
+  getStatusModel:
+    type: object
+    allOf:
+      - $ref: "#/definitions/responseModel"
+      - title: status
+        properties:
+          hw_version:
+            type: integer
+          version:
+            type: string
+          mode:
+            type: integer
+          time:
+            type: string
+          date:
+            type: string
+        required:
+          - hw_version
+          - version
+          - mode
+          - time
+          - date
+
+parameters:
+  idParam:
+    name: id
+    in: query
+    required: true
+    <<: *idType
+    
+  userParam:
+    name: username
+    in: query
+    description: Name of the user
+    required: true
+    type: string
+    format: string
+  
+  passParam:
+    name: password
+    in: query
+    description: User password
+    required: true
+    type: string
+    format: password
+    
+  floorParam:
+    name: floor
+    in: query
+    required: true
+    <<: *floorType
+    
+  outConfParam:
+    name: fields
+    in: query
+    description: The output configuration to set (JSON formatted)
+    required: true
+    type: string
+    x-serialize-json:
+      schema:
+        $ref: "#/definitions/outConfModel"
+  
+  outConfsParam:
+    name: fields
+    in: query
+    description: The list of output configurations to set (JSON formatted)
+    required: true
+    type: string
+    x-serialize-json:
+      schema:
+        type: array
+        items:
+          $ref: "#/definitions/outConfModel"
+        
+  outFieldsParam:
+    name: fields
+    in: query
+    description: List of output configuration fields (JSON formatted)
+    required: false
+    type: string
+    x-serialize-json:
+      schema:
+        $ref: "#/definitions/outFieldsModel"
+  
+  inFieldsParam:
+    name: fields
+    in: query
+    description: List of input configuration fields (JSON formatted)
+    required: false
+    type: string
+    x-serialize-json:
+      schema:
+        $ref: "#/definitions/inFieldsModel"
+  
+  timerParam:
+    name: timer
+    in: query
+    description: Output timer values
+    type: integer
+    format: int32
+    enum:
+      - 150
+      - 450
+      - 900
+      - 1500
+      - 2220
+      - 3120
+    
+responses:
+  default:
+    description: Successful response
+    schema:
+      $ref: "#/definitions/responseModel"
+  
+  unauthorized:
+    description: Authorization denied exception
+  
+  maintenance:
+    description: Maintenance mode exception
+    
+paths:
+  /login:
+    get:
+      operationId: login
+      security: []
+      description:
+        Login to the web service, returns a token if successful, returns HTTP status code 401 otherwise.
+      parameters:
+        - $ref: "#/parameters/userParam"
+        - $ref: "#/parameters/passParam"
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/loginModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+
+  /logout:
+    get:
+      operationId: logout
+      description:
+        Logout from the web service.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/statusModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /create_user:
+    get:
+      operationId: create_user
+      security: []
+      description:
+        Create a new user using a username and a password. Only possible in authorized mode.
+      parameters:
+        - $ref: "#/parameters/userParam"
+        - $ref: "#/parameters/passParam"
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /get_usernames:
+    get:
+      operationId: get_usernames
+      security: []
+      description:
+        Get the names of the users on the gateway. Only possible in authorized mode.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/getUsernamesModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /remove_user:
+    get:
+      operationId: remove_user
+      security: []
+      description: 
+        Remove a user. Only possible in authorized mode.
+      parameters:
+        - $ref: "#/parameters/userParam"
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+  
+  /get_status:
+    get:
+      operationId: get_status
+      description:
+        Get the status of the master controller.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/getStatusModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+         
+  /get_modules:
+    get:
+      operationId: get_modules
+      description:
+        Get a list of all modules attached and registered with the master.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/getModulesModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /module_discover_start:
+    get:
+      operationId: module_discover_start
+      description:
+        Start the module discover mode on the master.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/statusModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /module_discover_stop:
+    get:
+      operationId: module_discover_stop
+      description:
+        Stop the module discover mode on the master.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/statusModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /flash_leds:
+    get:
+      operationId: flash_leds
+      description:
+        Flash the leds on the module for an output/input/sensor.
+      parameters:
+        - $ref: "#/parameters/idParam"            
+        - name: type
+          in: query
+          description: "The module type: output/dimmer (0), input (1), sensor/temperature (2)"
+          required: true
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2
+
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/statusModel"         
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /get_output_status:
+    get:
+      operationId: get_output_status
+      description:
+        Stop the module discover mode on the master.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/getOutputStatusModel"  
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"                   
+          
+  /set_output:
+    get:
+      operationId: set_output
+      description:
+        Stop the module discover mode on the master.
+      parameters:
+        - $ref: "#/parameters/idParam"
+        - name: is_on
+          in: query
+          description: Whether the output should be on
+          required: true
+          type: string
+          format: string
+        - $ref: "#/parameters/timerParam"
+        - name: dimmer
+          in: query
+          description: The dimmer value to set
+          required: false
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /set_all_lights_off:
+    get:
+      operationId: set_all_lights_off
+      description:
+        Turn all lights off.
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+                
+  /set_all_lights_floor_off:
+    get:
+      operationId: set_all_lights_floor_off
+      description:
+        Turn all lights on a given floor off.
+      parameters:
+        - $ref: "#/parameters/floorParam"
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+            
+  /set_all_lights_floor_on:
+    get:
+      operationId: set_all_lights_floor_on
+      description:
+        Turn all lights on a given floor on
+      parameters:
+        - $ref: "#/parameters/floorParam"
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+
+  /get_output_configuration:
+    get:
+      operationId: get_output_configuration
+      description:
+        Get a specific output_configuration defined by its id.
+      parameters:
+        - $ref: "#/parameters/idParam"
+        - $ref: "#/parameters/outFieldsParam"
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/getOutputConfigModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+                
+  /get_output_configurations:
+    get:
+      operationId: get_output_configurations
+      description:
+        Get a specific output_configuration defined by its id.
+      parameters:
+        - $ref: "#/parameters/outFieldsParam"
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/getOutputConfigsModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+ 
+  /set_output_configuration:
+    get:
+      operationId: set_output_configuration
+      description:
+        Get a specific output_configuration defined by its id.
+      parameters:
+        - $ref: "#/parameters/outConfParam"
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+                    
+  /set_output_configurations:
+    get:
+      operationId: set_output_configurations
+      description:
+        Get a specific output_configuration defined by its id.
+      parameters:
+        - $ref: "#/parameters/outConfsParam"
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+
+  /get_group_action_configurations:
+    get:
+      operationId: get_group_action_configurations
+      description:
+        Get all group action configurations
+      parameters:
+        - $ref: "#/parameters/outFieldsParam"
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/getGroupActionConfigsModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+
+  /do_group_action:
+    get:
+      operationId: do_group_action
+      description:
+        Execute a group action.
+      parameters:
+        - name: group_action_id
+          in: query
+          required: true
+          description: Action id
+          type: integer
+          format: int32
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /set_group_action_configuration:
+    get:
+      operationId: set_group_action_configuration
+      description:
+        Set a group action configuration
+      parameters:
+          - name: config
+            in: query
+            required: true
+            description: Configuration string
+            type: string
+            format: string
+      responses:
+        200:
+          $ref: "#/responses/default"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+          
+  /get_input_configurations:
+    get:
+      operationId: get_input_configurations
+      description:
+        Get all input configurations
+      parameters:
+        - $ref: "#/parameters/inFieldsParam"
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/getInputConfigsModel"
+        401:
+          $ref: "#/responses/unauthorized"
+        503:
+          $ref: "#/responses/maintenance"
+    

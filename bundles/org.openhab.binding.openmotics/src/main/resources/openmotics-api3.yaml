@@ -1,0 +1,903 @@
+openapi: 3.0.3
+
+info:
+  title: OpenMotics Webservice API
+  version: 2.0.6
+
+servers:
+  - url: https://openmotics.local
+
+security:
+  - tokenSecurity: []
+
+components:
+  securitySchemes:
+    tokenSecurity:
+      type: apiKey
+      in: query
+      name: token
+      description: Security token through user authentication
+ 
+  schemas:
+    # Types
+    timerType:
+      description: Output timer values
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 65535
+
+    floorType:
+      description: Floor number
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 255
+      
+    idType:
+      description: ID number
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 240
+
+    nameType:
+      description: Item name
+      type: string
+      format: string
+      maxLength: 16
+      
+    oTypeType:
+      description: Output type
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 255
+      
+    omTypeType:
+      description: Output module types
+      type: string
+      format: string
+      maxLength: 1
+      enum:
+        #- o
+        - O
+        - R
+        - D
+      x-enum-varnames:
+        - Vo
+
+    imTypeType:
+      description: Input module types
+      type: string
+      format: string
+      maxLength: 1
+      enum:
+        #- i
+        - I
+        - T
+        - L
+      x-enum-varnames:
+        - Vi
+        
+    smTypeType:
+      description: Shutter module types
+      type: string
+      format: string
+      maxLength: 1
+      enum:
+        - S
+        
+    bActionsType:
+      description: A list of basic actions
+      type: string
+      format: string
+      
+    actionType:
+      description: A single action
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 255
+      
+    invertType:
+      description: Input inversion
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 255
+
+    # Models
+
+    outFields:
+      description: List of output configuration fields
+      type: array
+      items:
+        type: string
+        enum:
+          - floor
+          - module_type
+          - name
+          - timer
+          - type
+
+    outConf:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/idType"
+        floor:
+          $ref: "#/components/schemas/floorType"
+        name:
+          $ref: "#/components/schemas/nameType"
+        timer:
+          $ref: "#/components/schemas/timerType"
+        module_type:
+          $ref: "#/components/schemas/omTypeType"
+        type:
+          $ref: "#/components/schemas/oTypeType"
+      required:
+        - id
+
+    inFields:
+      description: List of input configuration fields
+      type: array
+      items:
+        type: string
+        enum:
+          - basic_actions
+          - module_type
+          - name
+          - action
+          - invert
+    
+    
+    inConf:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/idType"
+        basic_actions:
+          $ref: "#/components/schemas/bActionsType"
+        name:
+          $ref: "#/components/schemas/nameType"
+        action:
+          $ref: "#/components/schemas/actionType"
+        module_type:
+          $ref: "#/components/schemas/imTypeType"
+        invert:
+          $ref: "#/components/schemas/invertType"
+      required:
+        - id
+        
+    grpActConf:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/idType"
+        name:
+          $ref: "#/components/schemas/nameType"
+        actions:
+          $ref: "#/components/schemas/bActionsType"
+
+    responseModel:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: true if successful
+        msg:
+          type: string
+          format: string
+          description: error message if success is false
+      required:
+        - success
+
+    loginModel:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Authentication Token
+        next_step:
+          type: string
+          description: Next step to complete authentication
+    
+    loginResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/loginModel"
+
+    statusModel:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Status
+      required:
+          - status
+          
+    statusResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/statusModel"
+    
+    getUsernamesModel:
+      type: object
+      properties:
+        usernames:
+          description: list of usernames
+          type: array
+          items:
+            type: string
+      required:
+        - usernames
+
+    getUsernamesResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/getUsernamesModel"
+    
+    getModulesModel:  
+      type: object
+      properties:
+        outputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/omTypeType"
+        inputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/imTypeType"
+        shutters:
+          type: array
+          items:
+            $ref: "#/components/schemas/smTypeType"
+      required:
+        - outputs
+        - inputs
+        - shutters
+
+    getModulesResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/getModulesModel"
+
+    getOutputStatusModel:
+      type: object
+      properties:
+        status:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: integer
+              dimmer:
+                type: integer
+              ctimer:
+                type: integer
+              id:
+                type: integer
+
+    getOutputStatusResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/getOutputStatusModel"
+        
+    getOutputConfigModel:
+      type: object
+      properties:
+        config:
+          $ref: "#/components/schemas/outConf"
+
+    getOutputConfigResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/getOutputConfigModel"
+    
+    getOutputConfigsModel:
+      type: object
+      properties:
+        config:
+          type: array
+          items:
+            $ref: "#/components/schemas/outConf"
+    
+    getOutputConfigsResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/getOutputConfigsModel"
+    
+    getInputConfigsModel:
+      type: object
+      properties:
+        config:
+          type: array
+          items:
+            $ref: "#/components/schemas/inConf"
+    
+    getInputConfigsResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/getInputConfigsModel"
+    
+    getGroupActionConfigsModel:
+      type: object
+      properties:
+        config:
+          type: array
+          items:
+            $ref: "#/components/schemas/grpActConf"
+    
+    getGroupActionConfigsResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/getGroupActionConfigsModel"
+    
+    getStatusModel:
+      type: object
+      properties:
+        hw_version:
+          type: integer
+        version:
+          type: string
+        mode:
+          type: integer
+        time:
+          type: string
+        date:
+          type: string
+      required:
+        - hw_version
+        - version
+        - mode
+        - time
+        - date
+
+    getStatusResponse:
+      allOf:
+        - $ref: "#/components/schemas/responseModel"
+        - $ref: "#/components/schemas/getStatusModel"
+    
+  parameters:
+    idParam:
+      name: id
+      in: query
+      required: true
+      schema:
+        $ref: "#/components/schemas/idType"
+      
+    userParam:
+      name: username
+      in: query
+      description: Name of the user
+      required: true
+      schema:
+        type: string
+        format: string
+    
+    acceptParam:
+      name: accept_terms
+      in: query
+      description: Accept login terms
+      required: false
+      schema:
+        type: boolean
+
+    timeoutParam:
+      name: timeout
+      in: query
+      description: Login timeout
+      required: false
+      schema:
+        type: integer
+        maximum: 2592000
+        minimum: 3600
+
+    passParam:
+      name: password
+      in: query
+      description: User password
+      required: true
+      schema:
+        type: string
+        format: password
+      
+    floorParam:
+      name: floor
+      in: query
+      required: true
+      schema:
+        $ref: "#/components/schemas/idType"
+      
+    outConfParam:
+      name: fields
+      in: query
+      description: The output configuration to set (JSON formatted)
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/outConf"
+    
+    outConfsParam:
+      name: fields
+      in: query
+      description: The list of output configurations to set (JSON formatted)
+      required: true
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/outConf"
+          
+    outFieldsParam:
+      name: fields
+      in: query
+      description: List of output configuration fields (JSON formatted)
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/outFields"
+    
+    inFieldsParam:
+      name: fields
+      in: query
+      description: List of input configuration fields (JSON formatted)
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/inFields"
+    
+    timerParam:
+      name: timer
+      in: query
+      description: Output timer values
+      schema:
+        type: integer
+        format: int32
+        enum:
+          - 150
+          - 450
+          - 900
+          - 1500
+          - 2220
+          - 3120
+      
+  responses:
+    default:
+      description: Successful response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/responseModel"
+    
+    unauthorized:
+      description: Authorization denied exception
+    
+    maintenance:
+      description: Maintenance mode exception
+
+    status:
+      description: Successful response with status
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/statusResponse"
+paths:
+  /login:
+    get:
+      operationId: login
+      security: []
+      description:
+        Login to the web service, returns a token if successful, returns HTTP status code 401 otherwise.
+      parameters:
+        - $ref: "#/components/parameters/userParam"
+        - $ref: "#/components/parameters/passParam"
+        - $ref: "#/components/parameters/acceptParam"
+        - $ref: "#/components/parameters/timeoutParam"
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/loginResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+
+  /logout:
+    get:
+      operationId: logout
+      description:
+        Logout from the web service.
+      responses:
+        200:
+          $ref: "#/components/responses/status"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /create_user:
+    get:
+      operationId: create_user
+      security: []
+      description:
+        Create a new user using a username and a password. Only possible in authorized mode.
+      parameters:
+        - $ref: "#/components/parameters/userParam"
+        - $ref: "#/components/parameters/passParam"
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /get_usernames:
+    get:
+      operationId: get_usernames
+      security: []
+      description:
+        Get the names of the users on the gateway. Only possible in authorized mode.
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getUsernamesResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /remove_user:
+    get:
+      operationId: remove_user
+      security: []
+      description: 
+        Remove a user. Only possible in authorized mode.
+      parameters:
+        - $ref: "#/components/parameters/userParam"
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+  
+  /get_status:
+    get:
+      operationId: get_status
+      description:
+        Get the status of the master controller.
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getStatusResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+         
+  /get_modules:
+    get:
+      operationId: get_modules
+      description:
+        Get a list of all modules attached and registered with the master.
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getModulesResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /module_discover_start:
+    get:
+      operationId: module_discover_start
+      description:
+        Start the module discover mode on the master.
+      responses:
+        200:
+          $ref: "#/components/responses/status"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /module_discover_stop:
+    get:
+      operationId: module_discover_stop
+      description:
+        Stop the module discover mode on the master.
+      responses:
+        200:
+          $ref: "#/components/responses/status"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /flash_leds:
+    get:
+      operationId: flash_leds
+      description:
+        Flash the leds on the module for an output/input/sensor.
+      parameters:
+        - $ref: "#/components/parameters/idParam"            
+        - name: type
+          in: query
+          description: "The module type: output/dimmer (0), input (1), sensor/temperature (2)"
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 2
+      responses:
+        200:
+          $ref: "#/components/responses/status"      
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /get_output_status:
+    get:
+      operationId: get_output_status
+      description:
+        Stop the module discover mode on the master.
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getOutputStatusResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"                   
+          
+  /set_output:
+    get:
+      operationId: set_output
+      description:
+        Stop the module discover mode on the master.
+      parameters:
+        - $ref: "#/components/parameters/idParam"
+        - name: is_on
+          in: query
+          description: Whether the output should be on
+          required: true
+          schema:
+            type: string
+            format: string
+        - $ref: "#/components/parameters/timerParam"
+        - name: dimmer
+          in: query
+          description: The dimmer value to set
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 100
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /set_all_lights_off:
+    get:
+      operationId: set_all_lights_off
+      description:
+        Turn all lights off.
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+                
+  /set_all_lights_floor_off:
+    get:
+      operationId: set_all_lights_floor_off
+      description:
+        Turn all lights on a given floor off.
+      parameters:
+        - $ref: "#/components/parameters/floorParam"
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+            
+  /set_all_lights_floor_on:
+    get:
+      operationId: set_all_lights_floor_on
+      description:
+        Turn all lights on a given floor on
+      parameters:
+        - $ref: "#/components/parameters/floorParam"
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+
+  /get_output_configuration:
+    get:
+      operationId: get_output_configuration
+      description:
+        Get a specific output_configuration defined by its id.
+      parameters:
+        - $ref: "#/components/parameters/idParam"
+        - $ref: "#/components/parameters/outFieldsParam"
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getOutputConfigResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+                
+  /get_output_configurations:
+    get:
+      operationId: get_output_configurations
+      description:
+        Get a specific output_configuration defined by its id.
+      parameters:
+        - $ref: "#/components/parameters/outFieldsParam"
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getOutputConfigsResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+ 
+  /set_output_configuration:
+    get:
+      operationId: set_output_configuration
+      description:
+        Get a specific output_configuration defined by its id.
+      parameters:
+        - $ref: "#/components/parameters/outConfParam"
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+                    
+  /set_output_configurations:
+    get:
+      operationId: set_output_configurations
+      description:
+        Get a specific output_configuration defined by its id.
+      parameters:
+        - $ref: "#/components/parameters/outConfsParam"
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+
+  /get_group_action_configurations:
+    get:
+      operationId: get_group_action_configurations
+      description:
+        Get all group action configurations
+      parameters:
+        - $ref: "#/components/parameters/outFieldsParam"
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getGroupActionConfigsResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+
+  /do_group_action:
+    get:
+      operationId: do_group_action
+      description:
+        Execute a group action.
+      parameters:
+        - name: group_action_id
+          in: query
+          required: true
+          description: Action id
+          schema:
+            type: integer
+            format: int32
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /set_group_action_configuration:
+    get:
+      operationId: set_group_action_configuration
+      description:
+        Set a group action configuration
+      parameters:
+          - name: config
+            in: query
+            required: true
+            description: Configuration string
+            schema:
+              type: string
+              format: string
+      responses:
+        200:
+          $ref: "#/components/responses/default"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+          
+  /get_input_configurations:
+    get:
+      operationId: get_input_configurations
+      description:
+        Get all input configurations
+      parameters:
+        - $ref: "#/components/parameters/inFieldsParam"
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getInputConfigsResponse"
+        401:
+          $ref: "#/components/responses/unauthorized"
+        503:
+          $ref: "#/components/responses/maintenance"
+    
