@@ -12,15 +12,19 @@
  */
 package org.openhab.binding.openmotics.internal;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * The {@link OpenMoticsConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Alessandro Radicati - Initial contribution
  */
+@NonNullByDefault
 public class OpenMoticsConfiguration {
 
     /**
      * Sample configuration parameter. Replace with your own.
      */
-    public String config1;
+    public @Nullable String config1;
 }

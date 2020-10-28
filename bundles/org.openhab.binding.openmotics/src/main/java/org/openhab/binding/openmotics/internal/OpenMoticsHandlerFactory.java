@@ -14,16 +14,22 @@ package org.openhab.binding.openmotics.internal;
 
 import static org.openhab.binding.openmotics.internal.OpenMoticsBindingConstants.*;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.openmotics.handler.OpenMoticsBridgeHandler;
+import org.openhab.binding.openmotics.handler.OpenMoticsOutputHandler;
+import org.openhab.core.config.discovery.DiscoveryService;
+import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
+import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.BaseThingHandlerFactory;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerFactory;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -36,19 +42,33 @@ import org.osgi.service.component.annotations.Component;
 @Component(configurationPid = "binding.openmotics", service = ThingHandlerFactory.class)
 public class OpenMoticsHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_SAMPLE);
+    Map<ThingUID, ServiceRegistration<?>> servRegs = new HashMap<>();
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
-        return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
+        if (!SUPPORTED_THINGS.contains(thingTypeUID)) {
+            if (!SUPPORTED_BRIDGES.contains(thingTypeUID)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_SAMPLE.equals(thingTypeUID)) {
-            return new OpenMoticsHandler(thing);
+        if (SUPPORTED_BRIDGES.contains(thingTypeUID)) {
+            OpenMoticsBridgeHandler bridgeHandler = new OpenMoticsBridgeHandler((Bridge) thing);
+            OpenMoticsItemDiscovery itemDiscovery = new OpenMoticsItemDiscovery(bridgeHandler);
+            servRegs.put(thing.getUID(),
+                    bundleContext.registerService(DiscoveryService.class.getName(), itemDiscovery, null));
+            return bridgeHandler;
+        } else if (thingTypeUID.equals(THING_TYPE_OUTPUT) || thingTypeUID.equals(THING_TYPE_DIMMER)
+                || thingTypeUID.equals(THING_TYPE_GROUPACTION)) {
+            OpenMoticsOutputHandler thingHandler = new OpenMoticsOutputHandler(thing);
+            return thingHandler;
         }
 
         return null;

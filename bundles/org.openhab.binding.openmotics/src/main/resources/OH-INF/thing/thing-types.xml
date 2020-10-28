@@ -3,30 +3,110 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
-
-	<!-- Sample Thing Type -->
-	<thing-type id="sample">
-		<label>OpenMotics Binding Thing</label>
-		<description>Sample thing for OpenMotics Binding</description>
-
-		<channels>
-			<channel id="channel1" typeId="sample-channel"/>
-		</channels>
-
+	<bridge-type id="OMGateway">
+		<label>OpenMotics Gateway</label>
+		<description>The bridge to all OpenMotics things</description>
+		<!-- <representation-property>uniqueId</representation-property> -->
 		<config-description>
-			<parameter name="config1" type="text" required="true">
-				<label>Sample Parameter</label>
-				<description>This is a sample text configuration parameter</description>
+			<parameter name="ipaddress" type="text" required="true">
+				<description>IP Address of the OpenMotics Gateway</description>
+				<context>network-address</context>
+			</parameter>
+			<parameter name="username" type="text" required="true">
+				<description>OpenMotics Gateway User Name</description>
+			</parameter>
+			<parameter name="password" type="text" required="true">
+				<description>OpenMotics Gateway Password</description>
+				<context>password</context>
+			</parameter>
+			<!-- <parameter name="uniqueId" type="text" required="true"> -->
+			<!-- <description>OpenMotics Gateway Unique ID</description> -->
+			<!-- </parameter> -->
+		</config-description>
+	</bridge-type>
+	<thing-type id="OMMaster" listed="false">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="OMGateway"/>
+		</supported-bridge-type-refs>
+		<label>OpenMotics Master Controller</label>
+		<channels>
+			<channel typeId="version" id="version"></channel>
+		</channels>
+	</thing-type>
+	<thing-type id="OMOutput">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="OMGateway"/>
+		</supported-bridge-type-refs>
+		<label>OpenMotics Output</label>
+		<description>Relay based actuator</description>
+		<channels>
+			<channel typeId="system.power" id="relay"></channel>
+		</channels>
+		<config-description>
+			<parameter name="name" type="text" readOnly="true" required="true">
+				<description>Output name</description>
+			</parameter>
+			<parameter name="floor" type="integer" readOnly="true" required="true">
+				<description>Floor/Group number</description>
+			</parameter>
+			<parameter name="timer" type="text" readOnly="true" required="true">
+				<description>Configured off-timer</description>
 			</parameter>
 		</config-description>
-
 	</thing-type>
-
-	<!-- Sample Channel Type -->
-	<channel-type id="sample-channel">
-		<item-type>openmoticsItem</item-type>
-		<label>OpenMotics Binding Channel</label>
-		<description>Sample channel for OpenMotics Binding</description>
+	<thing-type id="OMGroupAction">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="OMGateway"/>
+		</supported-bridge-type-refs>
+		<label>OpenMotics Group Action</label>
+		<description>Group action script</description>
+		<channels>
+			<channel typeId="action" id="action"></channel>
+		</channels>
+		<config-description>
+			<parameter name="name" type="text" readOnly="true" required="true">
+				<description>Group action name</description>
+			</parameter>
+		</config-description>
+	</thing-type>
+	<thing-type id="OMDimmer">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="OMGateway"/>
+		</supported-bridge-type-refs>
+		<label>OpenMotics Dimmer</label>
+		<description>0-10 Volt Dimmer Output</description>
+		<channels>
+			<channel typeId="system.brightness" id="dimmer"></channel>
+		</channels>
+		<config-description>
+			<parameter name="name" type="text" readOnly="true" required="true">
+				<description>Output name</description>
+			</parameter>
+			<parameter name="floor" type="integer" readOnly="true" required="true">
+				<description>Floor/Group number</description>
+			</parameter>
+			<parameter name="timer" type="text" readOnly="true" required="true">
+				<description>Configured off-timer</description>
+			</parameter>
+		</config-description>
+	</thing-type>
+	<channel-type id="action">
+		<item-type>String</item-type>
+		<label>Action</label>
+		<description>Action command</description>
+		<category>Group</category>
+		<command>
+			<options>
+				<option value="RUN">Execute Action</option>
+			</options>
+		</command>
+	</channel-type>
+	<channel-type id="version">
+		<item-type>String</item-type>
+		<label>Version</label>
+		<description>OpenMotics Master Controller Version</description>
+		<category>Status</category>
+		<state readOnly="true"></state>
 	</channel-type>
 
 </thing:thing-descriptions>

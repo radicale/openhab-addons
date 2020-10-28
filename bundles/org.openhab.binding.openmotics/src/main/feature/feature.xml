@@ -18,6 +18,11 @@
 
 	<feature name="openhab-binding-openmotics" description="OpenMotics Binding" version="${project.version}">
 		<feature>openhab-runtime-base</feature>
+		<bundle dependency="true">mvn:com.google.code.gson/gson/2.8.1</bundle>
+		<bundle dependency="true">wrap:mvn:com.squareup.okhttp/logging-interceptor/2.7.5</bundle>
+		<bundle dependency="true">wrap:mvn:com.squareup.okhttp/okhttp/2.7.5</bundle>
+		<bundle dependency="true">wrap:mvn:com.squareup.okio/okio/1.6.0</bundle>
+		<bundle dependency="true">wrap:mvn:io.gsonfire/gson-fire/1.8.3</bundle>
 		<bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.openmotics/${project.version}</bundle>
 	</feature>
 </features>
