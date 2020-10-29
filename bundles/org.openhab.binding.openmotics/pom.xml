@@ -77,7 +77,7 @@
               <modelPackage>org.openhab.binding.openmotics.internal.api.model</modelPackage>
               <invokerPackage>org.openhab.binding.openmotics.internal.api</invokerPackage>
               <configOptions>
-                <!-- <library>native</library> -->
+                <library>native</library>
                 <dateLibrary>java8</dateLibrary>
                 <sourceFolder>src/main/java</sourceFolder>
               </configOptions>
