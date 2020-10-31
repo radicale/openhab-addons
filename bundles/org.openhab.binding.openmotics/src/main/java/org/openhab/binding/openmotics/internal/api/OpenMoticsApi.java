@@ -15,16 +15,15 @@ package org.openhab.binding.openmotics.internal.api;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.security.cert.CertificateException;
 import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.core.io.net.http.TrustAllTrustManager;
 
 /**
  * The {@link OpenMoticsApi} provides the API interface
@@ -57,22 +56,29 @@ public class OpenMoticsApi {
             client.setHost(ipaddress);
         }
 
-        TrustManager[] tm = new TrustManager[] { new X509TrustManager() {
-            @Override
-            public java.security.cert.X509Certificate @Nullable [] getAcceptedIssuers() {
-                return null;
-            }
+        /*
+         * TrustManager[] tm = new TrustManager[] { new X509TrustManager() {
+         * 
+         * @Override
+         * public java.security.cert.X509Certificate @Nullable [] getAcceptedIssuers() {
+         * return null;
+         * }
+         * 
+         * @Override
+         * public void checkClientTrusted(java.security.cert.X509Certificate @Nullable [] certs,
+         * 
+         * @Nullable String authType) throws CertificateException {
+         * }
+         * 
+         * @Override
+         * public void checkServerTrusted(java.security.cert.X509Certificate @Nullable [] certs,
+         * 
+         * @Nullable String authType) throws CertificateException {
+         * }
+         * } };
+         */
 
-            @Override
-            public void checkClientTrusted(java.security.cert.X509Certificate @Nullable [] certs,
-                    @Nullable String authType) throws CertificateException {
-            }
-
-            @Override
-            public void checkServerTrusted(java.security.cert.X509Certificate @Nullable [] certs,
-                    @Nullable String authType) throws CertificateException {
-            }
-        } };
+        TrustManager[] tm = { TrustAllTrustManager.getInstance() };
 
         // Install the all-trusting trust manager
         try {
